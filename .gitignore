@@ -1,0 +1,28 @@
+# Binários e artefatos de build (MSVC)
+*.exe
+*.pdb
+*.ilk
+*.obj
+*.o
+*.lib
+*.dll
+*.exp
+*.idb
+
+# Saídas de build
+build/
+out/
+bin/
+
+# Visual Studio
+.vs/
+
+# VS Code: guarda só as configurações compartilháveis
+.vscode/*
+!.vscode/tasks.json
+!.vscode/c_cpp_properties.json
+!.vscode/launch.json
+
+# Sistema
+Thumbs.db
+.DS_Store
