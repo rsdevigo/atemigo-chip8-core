@@ -49,6 +49,10 @@ namespace AtemigoChip8::core
 
         size_t getSize() const { return kSize; }
 
+        uint8_t flag() const {
+            return bank[15];
+        }
+
     private:
         static constexpr uint16_t kSize = 16;
         std::array<uint8_t, kSize> bank{};
