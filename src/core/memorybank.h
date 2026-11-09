@@ -3,6 +3,7 @@
 #include <array>
 #include <cstring>
 
+
 namespace AtemigoChip8::core
 {
     class MemoryBank
@@ -33,7 +34,7 @@ namespace AtemigoChip8::core
             return true;
         }
 
-        bool const saveState (uint8_t *state, size_t size)
+        bool saveState(uint8_t *state, size_t size) const
         {
             if (size != kSize || state == nullptr)
                 return false;
@@ -41,7 +42,7 @@ namespace AtemigoChip8::core
             return true;
         }
 
-        size_t getSize() { return kSize; }
+        size_t getSize() const { return kSize; }
 
     private:
         static constexpr uint16_t kSize = 1 << 12;
