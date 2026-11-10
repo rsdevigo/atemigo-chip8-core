@@ -16,7 +16,7 @@ namespace AtemigoChip8::core
 
     public:
         static const uint16_t fontBeginAddress = 0x50;
-        static const uint16_t stackBeginAddress = 0xEBF;
+        static const uint16_t stackBeginAddress = 0xEBE;
         static const uint16_t frameBufferBeginAddress = 0xEC0;
         static const uint16_t programBeginAddress = 0x200;
         static const size_t maxProgramSize = 3232;
