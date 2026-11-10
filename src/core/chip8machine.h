@@ -1,8 +1,12 @@
 #pragma once
 #include "coreoptions.h"
+#include "machinestate.h"
+#include "coreerror.h"
+#include "chip8config.h"
 #include "memorybank.h"
 #include "registerbank.h"
 #include "input.h"
+#include "cpu.h"
 namespace AtemigoChip8::core
 {
     class Chip8Machine
@@ -10,22 +14,35 @@ namespace AtemigoChip8::core
         MemoryBank *memory;
         RegisterBank *registerBank;
         Input *input;
-        // CPU
+        CPU *cpu;
         // Font
         CoreOptions options;
-
+        MachineState initialState;
+        uint32_t seed;
+        Chip8Config cConfig;
     public:
-        static const uint16_t fontBeginAddress = 0x50;
-        static const uint16_t stackBeginAddress = 0xEBE;
-        static const uint16_t frameBufferBeginAddress = 0xEC0;
-        static const uint16_t programBeginAddress = 0x200;
-        static const size_t maxProgramSize = 3232;
         
-        Chip8Machine()
+
+        Chip8Machine(uint32_t seed)
         {
+            this->seed = seed;
             memory = new MemoryBank();
             registerBank = new RegisterBank();
             input = new Input();
+            cpu = new CPU(
+                memory, 
+                input, 
+                registerBank, 
+                &options, 
+                this->seed,
+                cConfig
+            );
+
+            //Grava o initialState
+            memory->saveState(initialState.memory, MemoryBank::kSize);
+            registerBank->saveState(initialState.registerBank, RegisterBank::kSize);
+            cpu->saveState(initialState);
+            input->saveState(initialState.inputPreviousStatus, initialState.inputCurrentStatus);
         }
 
         ~Chip8Machine()
@@ -33,6 +50,7 @@ namespace AtemigoChip8::core
             delete memory;
             delete registerBank;
             delete input;
+            delete cpu;
         }
 
         void runFrame()
@@ -48,8 +66,14 @@ namespace AtemigoChip8::core
         {
         }
 
-        void saveState()
+        bool saveState(void *data, size_t size)
         {
+            MachineState mState;
+            memory->saveState(mState.memory, MemoryBank::kSize);
+            registerBank->saveState(mState.registerBank, RegisterBank::kSize);
+            cpu->saveState(mState);
+            input->saveState(mState.inputPreviousStatus, mState.inputCurrentStatus);
+            mState.serialize(data);
         }
 
         void loadState()

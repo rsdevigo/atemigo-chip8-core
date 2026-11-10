@@ -9,6 +9,8 @@ namespace AtemigoChip8::core
     class MemoryBank
     {
     public:
+        static constexpr uint16_t kSize = 1 << 12;
+        static constexpr uint16_t kMask = kSize - 1;
         void write(uint16_t a, uint8_t d)
         {
             bank[a & kMask] = d;
@@ -30,7 +32,7 @@ namespace AtemigoChip8::core
         {
             if (size != kSize || state == nullptr)
                 return false;
-            memcpy(bank.data(), state, size);
+            memcpy(bank.data(), state, kSize);
             return true;
         }
 
@@ -45,8 +47,6 @@ namespace AtemigoChip8::core
         size_t getSize() const { return kSize; }
 
     private:
-        static constexpr uint16_t kSize = 1 << 12;
-        static constexpr uint16_t kMask = kSize - 1;
         std::array<uint8_t, kSize> bank{};
     };
 }

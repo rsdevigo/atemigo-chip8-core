@@ -8,6 +8,7 @@ namespace AtemigoChip8::core
     class RegisterBank
     {
     public:
+        static constexpr uint16_t kSize = 16;
         void write(uint8_t address, uint8_t value)
         {
             assert(address < kSize);
@@ -35,7 +36,7 @@ namespace AtemigoChip8::core
         {
             if (size != kSize || state == nullptr)
                 return false;
-            memcpy(bank.data(), state, size);
+            memcpy(bank.data(), state, kSize);
             return true;
         }
 
@@ -49,12 +50,12 @@ namespace AtemigoChip8::core
 
         size_t getSize() const { return kSize; }
 
-        uint8_t flag() const {
+        uint8_t flag() const
+        {
             return bank[15];
         }
 
     private:
-        static constexpr uint16_t kSize = 16;
         std::array<uint8_t, kSize> bank{};
     };
 }
