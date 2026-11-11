@@ -383,6 +383,7 @@ namespace AtemigoChip8::core
             uint32_t seed,
             Chip8Config config)
         {
+            assert(seed != 0);
             memory = m;
             input = i;
             registerBank = r;

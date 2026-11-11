@@ -13,7 +13,7 @@ int main (void)
     CoreOptions core;
     
     Chip8Machine *machine;
-    machine = new Chip8Machine();
+    machine = new Chip8Machine(124123);
 
     std::cout << "Decimal: " << b << '\n';
     std::cout << "Hexadecimal: " << std::hex << b << '\n';

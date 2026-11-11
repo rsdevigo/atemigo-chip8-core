@@ -41,4 +41,28 @@ namespace AtemigoChip8::utils
         s = splitmix32(s);
         return s ? s : 0xDEADBEEFu; // xorshift32 não pode ter estado 0
     }
+
+    inline void writeByte(uint8_t *&data, uint32_t value, uint32_t size)
+    {
+        assert(size >= 1 && size <= 4);
+        for (uint32_t k = 0; k < size; k++)
+        {
+            *data = (value >> (8*(size - 1 - k))) & 0xFF;
+            data++;
+        }
+    }
+
+    inline int32_t readByte(const uint8_t *&data, uint32_t size)
+    {
+        assert(size >= 1 && size <= 4);
+
+        int32_t value = 0x0;
+
+        for (uint32_t k = 0; k < size; k++)
+        {
+            value |= (*data << (8*(size - 1 - k)));
+            data++;
+        }
+        return value;
+    }
 }
