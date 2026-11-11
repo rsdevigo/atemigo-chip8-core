@@ -26,6 +26,8 @@ namespace AtemigoChip8::core
         uint16_t stackBeginAddress = 0;
         uint16_t fontBeginAddress = 0;
         size_t frameBufferSize;
+        uint32_t width;
+        uint32_t height;
 
         MemoryBank *memory;
         Input *input;
@@ -175,6 +177,7 @@ namespace AtemigoChip8::core
                     registerBank->write(X, AtemigoChip8::utils::xorshift32(&generatorStatus) & NN);
                     break;
                 case 0xD000:
+                    draw(X, Y, N);
                     break;
                 case 0xE0A1:
                     if (!input->isKeyPressed(registerBank->read(X)))
@@ -372,6 +375,12 @@ namespace AtemigoChip8::core
             sp++;
         }
 
+        void draw(uint8_t X, uint8_t Y, uint8_t N)
+        {
+            uint8_t xCoord = X % width;
+            uint8_t yCoord = Y % height;
+            uint8_t *beginAddress = frameBufferBeginAddress
+        }
     public:
         bool isStopped = false;
         CoreError errorData;
