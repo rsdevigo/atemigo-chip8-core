@@ -8,6 +8,7 @@
 #include "input.h"
 #include "cpu.h"
 #include "font.h"
+#include "machineinfo.h"
 
 namespace AtemigoChip8::core
 {
@@ -56,6 +57,7 @@ namespace AtemigoChip8::core
 
         void runFrame()
         {
+            cpu->execute();
         }
 
         bool loadGame(const void *data, size_t size, uint32_t newSeed)
@@ -76,8 +78,14 @@ namespace AtemigoChip8::core
             return true;
         }
 
-        void reset()
+        bool reset(uint32_t newSeed)
         {
+            if (!loadInitialState(newSeed))
+                return false;
+            this->seed = newSeed;
+            CoreOptions newOptions;
+            options = newOptions;
+            return true;
         }
 
         bool saveState(void *data, size_t size)
@@ -110,8 +118,13 @@ namespace AtemigoChip8::core
             return loadMState(mState);
         }
 
-        void getMachineInfo()
+        MachineInfo getMachineInfo() const
         {
+            MachineInfo info;
+            info.width = cConfig.width;
+            info.height = cConfig.height;
+            info.fps = cConfig.frequency;
+            return info;
         }
 
         void updateCoreOptions(const CoreOptions &newOptions)
