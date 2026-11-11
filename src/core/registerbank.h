@@ -9,6 +9,7 @@ namespace AtemigoChip8::core
     {
     public:
         static constexpr uint16_t kSize = 16;
+        static constexpr uint8_t flagIndex = 15;
         void write(uint8_t address, uint8_t value)
         {
             assert(address < kSize);

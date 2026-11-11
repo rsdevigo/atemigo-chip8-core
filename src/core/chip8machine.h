@@ -104,6 +104,8 @@ namespace AtemigoChip8::core
                 return false;
             MachineState mState;
             const uint8_t *d = static_cast<const uint8_t *>(data);
+            if (!mState.checkSignature(d))
+                return false;
             mState.deserialize(d);
             return loadMState(mState);
         }
@@ -128,7 +130,7 @@ namespace AtemigoChip8::core
 
         bool loadMState(const MachineState &mState)
         {
-            if (mState.generatorStatus == 0 || mState.sp < -160 || mState.sp > 1887)
+            if (mState.generatorStatus == 0)
                 return false;
             
             if (!memory->loadState(mState.memory, MemoryBank::kSize))

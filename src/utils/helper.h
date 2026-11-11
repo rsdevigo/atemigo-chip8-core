@@ -32,7 +32,7 @@ namespace AtemigoChip8::utils
         return x ^ (x >> 16);
     }
 
-    inline uint32_t make_seed()
+    inline uint32_t makeSeed()
     {
         uint32_t s = std::random_device{}();
         s ^= (uint32_t)std::chrono::high_resolution_clock::now()
@@ -42,7 +42,7 @@ namespace AtemigoChip8::utils
         return s ? s : 0xDEADBEEFu; // xorshift32 não pode ter estado 0
     }
 
-    inline void writeByte(uint8_t *&data, uint32_t value, uint32_t size)
+    inline void writeBytesBigEndian(uint8_t *&data, uint32_t value, uint32_t size)
     {
         assert(size >= 1 && size <= 4);
         for (uint32_t k = 0; k < size; k++)
@@ -52,7 +52,7 @@ namespace AtemigoChip8::utils
         }
     }
 
-    inline int32_t readByte(const uint8_t *&data, uint32_t size)
+    inline int32_t readBytesBigEndian(const uint8_t *&data, uint32_t size)
     {
         assert(size >= 1 && size <= 4);
 

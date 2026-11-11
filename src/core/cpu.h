@@ -109,7 +109,7 @@ namespace AtemigoChip8::core
                 {
                     uint16_t sum = registerBank->read(X) + registerBank->read(Y);
                     registerBank->write(X, sum);
-                    registerBank->write(15, static_cast<uint8_t>(sum >= 0x100));
+                    registerBank->write(RegisterBank::flagIndex, static_cast<uint8_t>(sum >= 0x100));
                 }
                 break;
                 case 0x8005:
@@ -118,7 +118,7 @@ namespace AtemigoChip8::core
                     uint8_t xValue = registerBank->read(X);
                     uint8_t result = xValue - yValue;
                     registerBank->write(X, result);
-                    registerBank->write(15, static_cast<uint8_t>(xValue >= yValue));
+                    registerBank->write(RegisterBank::flagIndex, static_cast<uint8_t>(xValue >= yValue));
                 }
                 break;
                 case 0x8006:
@@ -130,7 +130,7 @@ namespace AtemigoChip8::core
 
                     uint8_t vX = registerBank->read(X);
                     registerBank->write(X, vX >> 1);
-                    registerBank->write(15, vX & 0x01);
+                    registerBank->write(RegisterBank::flagIndex, vX & 0x01);
                 }
                 break;
                 case 0x8007:
@@ -139,7 +139,7 @@ namespace AtemigoChip8::core
                     uint8_t xValue = registerBank->read(X);
                     uint8_t result = yValue - xValue;
                     registerBank->write(X, result);
-                    registerBank->write(15, static_cast<uint8_t>(yValue >= xValue));
+                    registerBank->write(RegisterBank::flagIndex, static_cast<uint8_t>(yValue >= xValue));
                 }
                 break;
                 case 0x800E:
@@ -151,7 +151,7 @@ namespace AtemigoChip8::core
 
                     uint8_t vX = registerBank->read(X);
                     registerBank->write(X, vX << 1);
-                    registerBank->write(15, (vX >> 7) & 0x01);
+                    registerBank->write(RegisterBank::flagIndex, (vX >> 7) & 0x01);
                 }
                 break;
                 case 0x9000:
@@ -204,7 +204,7 @@ namespace AtemigoChip8::core
                     i += registerBank->read(X);
                     if (options->fX1EBehavior && i >= 0x1000)
                     {
-                        registerBank->write(15, 1);
+                        registerBank->write(RegisterBank::flagIndex, 1);
                     }
                     break;
                 case 0xF00A:
@@ -313,7 +313,7 @@ namespace AtemigoChip8::core
 
         bool isValid(uint16_t pattern)
         {
-            for (uint16_t opcode : validsOpcodes)
+            for (uint16_t opcode : CPU::validsOpcodes)
             {
                 if (pattern == opcode)
                     return true;
@@ -321,7 +321,7 @@ namespace AtemigoChip8::core
             return false;
         }
 
-        const std::array<uint16_t, 34> validsOpcodes{
+        static constexpr std::array<uint16_t, 34> validsOpcodes{
             0x00E0,
             0x00EE,
             0x1000,
@@ -377,16 +377,39 @@ namespace AtemigoChip8::core
 
         void draw(uint8_t X, uint8_t Y, uint8_t N)
         {
-            uint8_t xCoord = X % width;
-            uint8_t yCoord = Y % height;
-            uint8_t *beginAddress = frameBufferBeginAddress
+            uint8_t colCoord = registerBank->read(X) % width;
+            uint8_t linCoord = registerBank->read(Y) % height;
+            uint16_t beginAddress = frameBufferBeginAddress + ((linCoord * (width / 8)) + colCoord/8);
+            registerBank->write(RegisterBank::flagIndex, 0);
+            uint8_t pixelOffset = colCoord % 8;
+            uint16_t spriteDataAddress = i;
+            uint8_t numberOfLines = (N+linCoord >= height)?height-linCoord:N;
+            for (int k = 0; k < numberOfLines; k++)
+            {
+                uint8_t data = memory->read(spriteDataAddress);
+                uint8_t firstPartData = data >> pixelOffset;
+                uint8_t secondPartData = data << (8-pixelOffset);
+                uint16_t base = beginAddress+(k*(width/8));
+                uint8_t currentData = memory->read(base);
+                if ((currentData & firstPartData) != 0)
+                    registerBank->write(RegisterBank::flagIndex, 1);
+                memory->write(base, currentData ^ firstPartData);
+                if ((colCoord/8) < (width/8)-1)
+                {
+                    currentData = memory->read(base+1);
+                    if ((currentData & secondPartData) != 0)
+                        registerBank->write(RegisterBank::flagIndex, 1);
+                    memory->write(base+1, currentData ^ secondPartData);
+                }
+                spriteDataAddress++;
+            }
         }
     public:
         bool isStopped = false;
         CoreError errorData;
         CPU(
             MemoryBank *m,
-            Input *i,
+            Input *in,
             RegisterBank *r,
             CoreOptions *o,
             uint32_t seed,
@@ -394,7 +417,7 @@ namespace AtemigoChip8::core
         {
             assert(seed != 0);
             memory = m;
-            input = i;
+            input = in;
             registerBank = r;
             options = o;
             delayTimer = 0;
@@ -403,9 +426,12 @@ namespace AtemigoChip8::core
             frameBufferBeginAddress = config.frameBufferBeginAddress;
             frameBufferSize = config.frameBufferSize;
             sp = 0;
+            i = 0;
             stackBeginAddress = config.stackBeginAddress;
             generatorStatus = seed;
             fontBeginAddress = config.fontBeginAddress;
+            width = config.width;
+            height = config.height;
         }
 
         void update(uint16_t inputStatus)
