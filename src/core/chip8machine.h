@@ -22,7 +22,6 @@ namespace AtemigoChip8::core
         CoreOptions options;
         MachineState initialState;
         uint32_t seed;
-        Chip8Config cConfig;
 
     public:
         Chip8Machine(uint32_t seed)
@@ -36,10 +35,9 @@ namespace AtemigoChip8::core
                 input,  
                 registerBank,
                 &options,
-                this->seed,
-                cConfig);
+                this->seed);
             for(size_t k = 0; k < Font::table.size(); k++)
-                memory->write(cConfig.fontBeginAddress+k, Font::table[k]);
+                memory->write(Chip8Config::fontBeginAddress+k, Font::table[k]);
             // Grava o initialState
             memory->saveState(initialState.memory, MemoryBank::kSize);
             registerBank->saveState(initialState.registerBank, RegisterBank::kSize);
@@ -55,14 +53,18 @@ namespace AtemigoChip8::core
             delete cpu;
         }
 
-        void runFrame()
+        void runFrame(uint16_t inputStatus)
         {
-            cpu->execute();
+            cpu->update(inputStatus);
+            if (cpu->isStopped)
+            {
+                
+            }
         }
 
         bool loadGame(const void *data, size_t size, uint32_t newSeed)
         {
-            if (size > cConfig.maxProgramSize || data == nullptr || size == 0)
+            if (size > Chip8Config::maxProgramSize || data == nullptr || size == 0)
                 return false;
 
             if (!loadInitialState(newSeed))
@@ -73,7 +75,7 @@ namespace AtemigoChip8::core
             const uint8_t *d = static_cast<const uint8_t *>(data);
             for (size_t k = 0; k < size; k++)
             {
-                memory->write(cConfig.programBeginAddress + k, *(d+k));
+                memory->write(Chip8Config::programBeginAddress + k, *(d+k));
             }
             return true;
         }
@@ -121,9 +123,9 @@ namespace AtemigoChip8::core
         MachineInfo getMachineInfo() const
         {
             MachineInfo info;
-            info.width = cConfig.width;
-            info.height = cConfig.height;
-            info.fps = cConfig.frequency;
+            info.width = Chip8Config::width;
+            info.height = Chip8Config::height;
+            info.fps = Chip8Config::frequency;
             return info;
         }
 
@@ -133,11 +135,11 @@ namespace AtemigoChip8::core
         }
 
     private:
-        bool loadInitialState(uint32_t seed)
+        bool loadInitialState(uint32_t newSeed)
         {
-            if (seed == 0)
+            if (newSeed == 0)
                 return false;
-            initialState.generatorStatus = seed;
+            initialState.generatorStatus = newSeed;
             return loadMState(initialState);
         }
 

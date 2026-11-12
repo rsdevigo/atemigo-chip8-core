@@ -412,8 +412,7 @@ namespace AtemigoChip8::core
             Input *in,
             RegisterBank *r,
             CoreOptions *o,
-            uint32_t seed,
-            Chip8Config config)
+            uint32_t seed)
         {
             assert(seed != 0);
             memory = m;
@@ -422,16 +421,16 @@ namespace AtemigoChip8::core
             options = o;
             delayTimer = 0;
             soundTimer = 0;
-            pc = config.programBeginAddress;
-            frameBufferBeginAddress = config.frameBufferBeginAddress;
-            frameBufferSize = config.frameBufferSize;
+            pc = Chip8Config::programBeginAddress;
+            frameBufferBeginAddress = Chip8Config::frameBufferBeginAddress;
+            frameBufferSize = Chip8Config::frameBufferSize;
             sp = 0;
             i = 0;
-            stackBeginAddress = config.stackBeginAddress;
+            stackBeginAddress = Chip8Config::stackBeginAddress;
             generatorStatus = seed;
-            fontBeginAddress = config.fontBeginAddress;
-            width = config.width;
-            height = config.height;
+            fontBeginAddress = Chip8Config::fontBeginAddress;
+            width = Chip8Config::width;
+            height = Chip8Config::height;
         }
 
         void update(uint16_t inputStatus)

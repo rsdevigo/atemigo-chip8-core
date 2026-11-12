@@ -23,6 +23,8 @@ namespace AtemigoChip8::core
 
         uint8_t *data() { return bank.data(); }
 
+        const uint8_t *frameBuffer() { return &bank[Chip8Config::frameBufferBeginAddress]; }
+
         void reset()
         {
             bank.fill(0x00);
