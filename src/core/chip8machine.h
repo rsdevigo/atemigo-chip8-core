@@ -9,7 +9,7 @@
 #include "cpu.h"
 #include "font.h"
 #include "machineinfo.h"
-
+#include "frameinfo.h"
 namespace AtemigoChip8::core
 {
     class Chip8Machine
@@ -26,24 +26,13 @@ namespace AtemigoChip8::core
     public:
         Chip8Machine(uint32_t seed)
         {
-            this->seed = seed;
-            memory = new MemoryBank();
-            registerBank = new RegisterBank();
-            input = new Input();
-            cpu = new CPU(
-                memory,
-                input,  
-                registerBank,
-                &options,
-                this->seed);
-            for(size_t k = 0; k < Font::table.size(); k++)
-                memory->write(Chip8Config::fontBeginAddress+k, Font::table[k]);
-            // Grava o initialState
-            memory->saveState(initialState.memory, MemoryBank::kSize);
-            registerBank->saveState(initialState.registerBank, RegisterBank::kSize);
-            cpu->saveState(initialState);
-            input->saveState(initialState.inputPreviousStatus, initialState.inputCurrentStatus);
+            initMachine(seed);
         }
+
+        // A máquina é dona das peças (ponteiros crus + delete no destrutor):
+        // uma cópia faria duas máquinas apagarem as mesmas peças.
+        Chip8Machine(const Chip8Machine &) = delete;
+        Chip8Machine &operator=(const Chip8Machine &) = delete;
 
         ~Chip8Machine()
         {
@@ -53,13 +42,15 @@ namespace AtemigoChip8::core
             delete cpu;
         }
 
-        void runFrame(uint16_t inputStatus)
+        FrameInfo runFrame(uint16_t inputStatus)
         {
+            FrameInfo info;
             cpu->update(inputStatus);
-            if (cpu->isStopped)
-            {
-                
-            }
+            info.frameBuffer = memory->data() + Chip8Config::frameBufferBeginAddress;
+            info.isStopped = cpu->isStopped;
+            info.errorData = cpu->errorData;
+            info.isEmitting = cpu->isEmittingSound();
+            return info;
         }
 
         bool loadGame(const void *data, size_t size, uint32_t newSeed)
@@ -134,6 +125,26 @@ namespace AtemigoChip8::core
             options = newOptions;
         }
 
+        void *getMemoryRAM()
+        {
+            return memory->data();
+        }
+
+        void *getMemoryVRAM()
+        {
+            return memory->data()+Chip8Config::frameBufferBeginAddress;
+        }
+
+        size_t getMemoryRAMSize()
+        {
+            return MemoryBank::kSize;
+        }
+
+        size_t getMemoryVRAMSize()
+        {
+            return Chip8Config::frameBufferSize;
+        }
+
     private:
         bool loadInitialState(uint32_t newSeed)
         {
@@ -158,6 +169,27 @@ namespace AtemigoChip8::core
                 return false;
 
             return true;
+        }
+
+        void initMachine(uint32_t seed)
+        {
+            this->seed = seed;
+            memory = new MemoryBank();
+            registerBank = new RegisterBank();
+            input = new Input();
+            cpu = new CPU(
+                memory,
+                input,  
+                registerBank,
+                &options,
+                this->seed);
+            for(size_t k = 0; k < Font::table.size(); k++)
+                memory->write(Chip8Config::fontBeginAddress+k, Font::table[k]);
+            // Grava o initialState
+            memory->saveState(initialState.memory, MemoryBank::kSize);
+            registerBank->saveState(initialState.registerBank, RegisterBank::kSize);
+            cpu->saveState(initialState);
+            input->saveState(initialState.inputPreviousStatus, initialState.inputCurrentStatus);
         }
     };
 }

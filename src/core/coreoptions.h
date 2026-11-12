@@ -8,10 +8,7 @@ namespace AtemigoChip8::core {
         bool bNNNBehavior;
         bool fX1EBehavior;
         bool fXsBehavior;
-        int soundFrequency;
-        int sampleRate;
-        int fps;
-        uint32_t pixelColor;
+        
 
         CoreOptions()
         {
@@ -20,10 +17,6 @@ namespace AtemigoChip8::core {
             bNNNBehavior = false;
             fX1EBehavior = true;
             fXsBehavior = true;
-            soundFrequency = 440;
-            sampleRate = 48000;
-            fps = 60;
-            pixelColor = 0xFFFFFF;
         }
         
     };

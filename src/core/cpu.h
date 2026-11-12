@@ -174,7 +174,7 @@ namespace AtemigoChip8::core
                     }
                     break;
                 case 0xC000:
-                    registerBank->write(X, AtemigoChip8::utils::xorshift32(&generatorStatus) & NN);
+                    registerBank->write(X, (AtemigoChip8::utils::xorshift32(&generatorStatus) >> 24) & NN);
                     break;
                 case 0xD000:
                     draw(X, Y, N);
@@ -379,34 +379,41 @@ namespace AtemigoChip8::core
         {
             uint8_t colCoord = registerBank->read(X) % width;
             uint8_t linCoord = registerBank->read(Y) % height;
-            uint16_t beginAddress = frameBufferBeginAddress + ((linCoord * (width / 8)) + colCoord/8);
+            uint16_t beginAddress = frameBufferBeginAddress + ((linCoord * (width / 8)) + colCoord / 8);
             registerBank->write(RegisterBank::flagIndex, 0);
             uint8_t pixelOffset = colCoord % 8;
             uint16_t spriteDataAddress = i;
-            uint8_t numberOfLines = (N+linCoord >= height)?height-linCoord:N;
+            uint8_t numberOfLines = (N + linCoord >= height) ? height - linCoord : N;
             for (int k = 0; k < numberOfLines; k++)
             {
                 uint8_t data = memory->read(spriteDataAddress);
                 uint8_t firstPartData = data >> pixelOffset;
-                uint8_t secondPartData = data << (8-pixelOffset);
-                uint16_t base = beginAddress+(k*(width/8));
+                uint8_t secondPartData = data << (8 - pixelOffset);
+                uint16_t base = beginAddress + (k * (width / 8));
                 uint8_t currentData = memory->read(base);
                 if ((currentData & firstPartData) != 0)
                     registerBank->write(RegisterBank::flagIndex, 1);
                 memory->write(base, currentData ^ firstPartData);
-                if ((colCoord/8) < (width/8)-1)
+                if ((colCoord / 8) < (width / 8) - 1)
                 {
-                    currentData = memory->read(base+1);
+                    currentData = memory->read(base + 1);
                     if ((currentData & secondPartData) != 0)
                         registerBank->write(RegisterBank::flagIndex, 1);
-                    memory->write(base+1, currentData ^ secondPartData);
+                    memory->write(base + 1, currentData ^ secondPartData);
                 }
                 spriteDataAddress++;
             }
         }
+
     public:
         bool isStopped = false;
         CoreError errorData;
+
+        bool isEmittingSound() const
+        {
+            return soundTimer > 0;
+        }
+
         CPU(
             MemoryBank *m,
             Input *in,
@@ -488,4 +495,3 @@ namespace AtemigoChip8::core
         }
     };
 }
-
