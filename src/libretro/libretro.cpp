@@ -138,6 +138,8 @@ void retro_set_environment(retro_environment_t cb)
 void retro_set_video_refresh(retro_video_refresh_t cb)
 {
     videoCB = cb;
+    if (core)
+        core->setVideoRefresh(cb);
 }
 
 void retro_set_audio_sample(retro_audio_sample_t cb)
@@ -148,16 +150,22 @@ void retro_set_audio_sample(retro_audio_sample_t cb)
 void retro_set_audio_sample_batch(retro_audio_sample_batch_t cb)
 {
     audioBatchCB = cb;
+    if (core)
+        core->setAudioSampleBatch(cb);
 }
 
 void retro_set_input_poll(retro_input_poll_t cb)
 {
     inputPollCB = cb;
+    if (core)
+        core->setInputPoll(cb);
 }
 
 void retro_set_input_state(retro_input_state_t cb)
 {
     inputStateCB = cb;
+    if (core)
+        core->setInputState(cb);
 }
 
 // Informações do core
@@ -171,7 +179,7 @@ void retro_get_system_info(struct retro_system_info *info)
     info->library_name = "Atemigo CHIP-8";
     info->library_version = "0.1";
     info->need_fullpath = false;
-    info->valid_extensions = "ch8";
+    info->valid_extensions = "ch8|c8|chip8|bin";
     info->block_extract = false;
 }
 
@@ -195,6 +203,13 @@ bool retro_load_game(const struct retro_game_info *game)
     enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_XRGB8888;
     if (!environCb || !environCb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))
         return false;
+
+    // O frontend pode entregar os retro_set_* depois do retro_init;
+    // repassa de novo aqui, quando todos já foram entregues.
+    core->setVideoRefresh(videoCB);
+    core->setAudioSampleBatch(audioBatchCB);
+    core->setInputPoll(inputPollCB);
+    core->setInputState(inputStateCB);
 
     if (!core->loadGame(game))
         return false;
